@@ -1,0 +1,17 @@
+{
+  "name": "neura-focus",
+  "version": "1.0.0",
+  "description": "Local focus tracker — system tray, smart popups, activity insights",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "active-win": "^9.0.0",
+    "better-sqlite3": "^12.8.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "electron": "^31.0.0"
+  }
+}

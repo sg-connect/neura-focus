@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuraFocus</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1d27;
+    --border: #22263a;
+    --accent: #6c63ff;
+    --accent2: #a78bfa;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --focus-color: #6c63ff;
+    --distract-color: #ef4444;
+    --idle-color: #334155;
+    --comm-color: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+  }
+  .logo-icon {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, #6c63ff, #a78bfa);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .nav-tab.active { background: var(--surface2); color: var(--text); }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .focus-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px 5px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .focus-mode-toggle.active {
+    border-color: var(--accent);
+    background: rgba(108,99,255,0.12);
+    color: var(--accent2);
+  }
+  .toggle-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.2s;
+  }
+  .focus-mode-toggle.active .toggle-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .tray-score {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--success);
+  }
+
+  /* ─── LAYOUT ─── */
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    gap: 0;
+    flex: 1;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+  }
+
+  /* ─── LEFT SIDEBAR ─── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .score-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .score-ring {
+    position: relative;
+    width: 110px; height: 110px;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .score-ring-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent2);
+    line-height: 1;
+  }
+  .score-ring-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .score-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--success);
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .stat-card-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .stat-card-val { font-size: 18px; font-weight: 700; }
+  .stat-card-val.focus { color: var(--focus-color); }
+  .stat-card-val.distract { color: var(--distract-color); }
+  .stat-card-val.idle { color: var(--muted); }
+  .stat-card-val.switches { color: var(--comm-color); }
+
+  .top-apps { display: flex; flex-direction: column; gap: 6px; }
+  .app-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .app-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .app-info { flex: 1; min-width: 0; }
+  .app-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-bar-wrap { height: 3px; background: var(--border); border-radius: 2px; margin-top: 3px; }
+  .app-bar { height: 3px; border-radius: 2px; }
+  .app-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+  /* ─── MAIN CENTER ─── */
+  .center {
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Timeline */
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 0 8px;
+    align-items: center;
+  }
+  .tl-hours {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .tl-hour {
+    font-size: 10px;
+    color: var(--muted);
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .tl-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tl-row {
+    display: flex;
+    gap: 2px;
+    height: 26px;
+    align-items: center;
+  }
+  .tl-block {
+    height: 22px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    position: relative;
+    cursor: default;
+    transition: opacity 0.15s;
+  }
+  .tl-block:hover { opacity: 0.8; }
+  .tl-block[data-cat="focus"] { background: var(--focus-color); opacity: 0.85; }
+  .tl-block[data-cat="distract"] { background: var(--distract-color); opacity: 0.75; }
+  .tl-block[data-cat="idle"] { background: var(--idle-color); opacity: 0.6; }
+  .tl-block[data-cat="comm"] { background: var(--comm-color); opacity: 0.75; }
+  .tl-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .tl-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .tl-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* Context switch chart */
+  .switch-bar-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+  }
+  .switch-bar {
+    flex: 1;
+    background: var(--accent);
+    border-radius: 3px 3px 0 0;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .switch-bar.high { background: var(--distract-color); opacity: 0.8; }
+  .switch-bar:hover { opacity: 1; }
+  .switch-labels {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .switch-label { flex: 1; text-align: center; font-size: 9px; color: var(--muted); }
+
+  /* ─── RIGHT PANEL ─── */
+  .right-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .insight-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .insight-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .insight-text {}
+  .insight-title { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .insight-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .insight-action {
+    margin-top: 8px;
+    background: rgba(108,99,255,0.15);
+    color: var(--accent2);
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  /* ─── POPUP NOTIFICATION (mock overlay) ─── */
+  .popup-demo {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 320px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    z-index: 999;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .popup-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .popup-app-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6c63ff, #a78bfa);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .popup-app-name { font-size: 12px; font-weight: 700; }
+  .popup-time { font-size: 10px; color: var(--muted); }
+  .popup-msg {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .popup-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .popup-actions { display: flex; gap: 8px; }
+  .popup-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+  }
+  .popup-btn.primary { background: var(--accent); color: #fff; }
+  .popup-btn.secondary { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+  .popup-dismiss {
+    position: absolute;
+    top: 12px; right: 14px;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* ─── POPUP TYPES STRIP ─── */
+  .popup-types {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .popup-type-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .popup-type-chip:hover, .popup-type-chip.selected {
+    border-color: var(--accent);
+    color: var(--accent2);
+    background: rgba(108,99,255,0.1);
+  }
+
+  /* ─── FOCUS MODE BANNER ─── */
+  .focus-banner {
+    background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(167,139,250,0.08));
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .focus-banner-left { display: flex; align-items: center; gap: 10px; }
+  .focus-pulse {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.3);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(108,99,255,0.3); }
+    50% { box-shadow: 0 0 0 7px rgba(108,99,255,0.1); }
+  }
+  .focus-banner-text { font-size: 13px; font-weight: 600; }
+  .focus-banner-sub { font-size: 11px; color: var(--accent2); margin-top: 1px; }
+  .focus-end-btn {
+    background: rgba(108,99,255,0.2);
+    border: 1px solid rgba(108,99,255,0.4);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--accent2);
+    cursor: pointer;
+  }
+
+  /* ─── LABEL BADGE ─── */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge.mockup {
+    background: rgba(245,158,11,0.15);
+    color: var(--warning);
+    border: 1px solid rgba(245,158,11,0.3);
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    NeuraFocus
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active">Today</div>
+    <div class="nav-tab">Week</div>
+    <div class="nav-tab">Insights</div>
+    <div class="nav-tab">Settings</div>
+  </div>
+  <div class="topbar-right">
+    <div class="focus-mode-toggle" id="focusToggle" onclick="toggleFocus()">
+      <div class="toggle-dot"></div>
+      <span id="focusLabel">Start Focus</span>
+    </div>
+    <div class="tray-score" id="trayScore">Score —</div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-section-label">Focus Score</div>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="45" fill="none" stroke="#22263a" stroke-width="10"/>
+            <circle cx="55" cy="55" r="45" fill="none" stroke="url(#grad)" stroke-width="10"
+              id="scoreRingCircle" stroke-dasharray="282.6" stroke-dashoffset="282.6" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#6c63ff"/>
+                <stop offset="100%" style="stop-color:#a78bfa"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="score-ring-label">
+            <div class="score-ring-num" id="scoreNum">—</div>
+            <div class="score-ring-sub">/ 100</div>
+          </div>
+        </div>
+        <div class="score-label" id="scoreLabel">Loading...</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-section-label">Today at a glance</div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-card-label">Focus</div>
+          <div class="stat-card-val focus" id="statFocus">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Distracted</div>
+          <div class="stat-card-val distract" id="statDistract">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Idle</div>
+          <div class="stat-card-val idle" id="statIdle">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Switches</div>
+          <div class="stat-card-val switches" id="statSwitches">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-section-label">Top Apps</div>
+      <div class="top-apps" id="topApps">
+        <div class="app-row">
+          <div class="app-icon" style="background:rgba(108,99,255,0.15);color:#6c63ff">⌨️</div>
+          <div class="app-info">
+            <div class="app-name">VS Code</div>
+            <div class="app-bar-wrap"><div class="app-bar" style="width:82%;background:#6c63ff"></div></div>
+          </div>
+          <div class="app-time">3h 10m</div>
+        </div>
+        <div class="app-row">
+          <div class="app-icon" style="background:rgba(239,68,68,0.12);color:#ef4444">🌐</div>
+          <div class="app-info">
+            <div class="app-name">Chrome</div>
+            <div class="app-bar-wrap"><div class="app-bar" style="width:55%;background:#ef4444"></div></div>
+          </div>
+          <div class="app-time">2h 08m</div>
+        </div>
+        <div class="app-row">
+          <div class="app-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b">💬</div>
+          <div class="app-info">
+            <div class="app-name">Slack</div>
+            <div class="app-bar-wrap"><div class="app-bar" style="width:28%;background:#f59e0b"></div></div>
+          </div>
+          <div class="app-time">1h 03m</div>
+        </div>
+        <div class="app-row">
+          <div class="app-icon" style="background:rgba(34,197,94,0.12);color:#22c55e">🖥</div>
+          <div class="app-info">
+            <div class="app-name">iTerm</div>
+            <div class="app-bar-wrap"><div class="app-bar" style="width:22%;background:#22c55e"></div></div>
+          </div>
+          <div class="app-time">52m</div>
+        </div>
+        <div class="app-row">
+          <div class="app-icon" style="background:rgba(239,68,68,0.12);color:#ef4444">▶️</div>
+          <div class="app-info">
+            <div class="app-name">YouTube</div>
+            <div class="app-bar-wrap"><div class="app-bar" style="width:14%;background:#ef4444"></div></div>
+          </div>
+          <div class="app-time">35m</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+
+    <!-- Live Status Bar -->
+    <div id="liveBar" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="liveIndicator" style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></div>
+        <div>
+          <div style="font-size:13px;font-weight:600" id="liveAppName">Waiting for activity...</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px" id="liveAppSub">Tracker is running in background</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="liveCategoryBadge" style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--muted)">—</div>
+        <div style="font-size:11px;color:var(--muted)" id="liveTimer">0m</div>
+      </div>
+    </div>
+
+    <!-- Focus Mode Banner -->
+    <div class="focus-banner" id="focusBanner" style="display:none">
+      <div class="focus-banner-left">
+        <div class="focus-pulse"></div>
+        <div>
+          <div class="focus-banner-text">Focus mode is active</div>
+          <div class="focus-banner-sub" id="focusBannerSub">Distraction alerts suppressed</div>
+        </div>
+      </div>
+      <div class="focus-end-btn" id="pauseBtn" onclick="toggleFocus()">End Session</div>
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="card">
+      <div class="card-title">⏱ Activity Timeline — Today</div>
+      <div class="timeline-grid">
+        <div class="tl-hours" id="timelineHours">
+        </div>
+        <div class="tl-blocks" id="timelineBlocks">
+        </div>
+      </div>
+      <div class="tl-legend">
+        <div class="tl-legend-item"><div class="tl-dot" style="background:var(--focus-color)"></div> Focus</div>
+        <div class="tl-legend-item"><div class="tl-dot" style="background:var(--distract-color)"></div> Distraction</div>
+        <div class="tl-legend-item"><div class="tl-dot" style="background:var(--comm-color)"></div> Communication</div>
+        <div class="tl-legend-item"><div class="tl-dot" style="background:var(--idle-color)"></div> Idle</div>
+      </div>
+    </div>
+
+    <!-- Context Switching -->
+    <div class="card">
+      <div class="card-title">🔀 Context Switches per Hour</div>
+      <div class="switch-bar-wrap" id="switchBars"></div>
+      <div class="switch-labels" id="switchLabels"></div>
+    </div>
+
+    <!-- Popup Types -->
+    <div class="card">
+      <div class="card-title">🔔 Notification Previews — click to preview</div>
+      <div class="popup-types">
+        <div class="popup-type-chip selected" onclick="showPopup('distracted')">😵 You're distracted</div>
+        <div class="popup-type-chip" onclick="showPopup('walk')">🚶 Take a walk</div>
+        <div class="popup-type-chip" onclick="showPopup('switching')">🔀 Too much switching</div>
+        <div class="popup-type-chip" onclick="showPopup('great')">🔥 Great focus streak</div>
+        <div class="popup-type-chip" onclick="showPopup('break')">☕ Time for a break</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div>
+      <div class="sidebar-section-label">Today's Insights</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="insights">
+
+        <div class="insight-card">
+          <div class="insight-icon" style="background:rgba(108,99,255,0.15)">🧠</div>
+          <div class="insight-text">
+            <div class="insight-title">Peak focus: 9–11am</div>
+            <div class="insight-desc">Your best deep work window is morning. Schedule hard tasks there.</div>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-icon" style="background:rgba(239,68,68,0.12)">🌐</div>
+          <div class="insight-text">
+            <div class="insight-title">Chrome is your #1 distraction</div>
+            <div class="insight-desc">35 min on YouTube today. Consider blocking it during focus mode.</div>
+            <div class="insight-action">Block in Focus Mode</div>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-icon" style="background:rgba(245,158,11,0.12)">⚡</div>
+          <div class="insight-text">
+            <div class="insight-title">High switching at 2pm</div>
+            <div class="insight-desc">You switched apps 18 times in 1 hour — risk of cognitive overload.</div>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-icon" style="background:rgba(34,197,94,0.12)">✅</div>
+          <div class="insight-text">
+            <div class="insight-title">Longest focus run: 88 min</div>
+            <div class="insight-desc">VS Code, 10:02–11:30am. Your record is 112 min.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-section-label">Weekly pattern</div>
+      <div style="display:flex;gap:6px;align-items:flex-end;height:70px" id="weekChart">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="background:var(--focus-color);border-radius:3px;width:100%;opacity:0.7" data-h="60"></div>
+          <div style="font-size:9px;color:var(--muted)">Mon</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="background:var(--focus-color);border-radius:3px;width:100%;opacity:0.9" data-h="80"></div>
+          <div style="font-size:9px;color:var(--muted)">Tue</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="background:var(--distract-color);border-radius:3px;width:100%;opacity:0.7" data-h="35"></div>
+          <div style="font-size:9px;color:var(--muted)">Wed</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="background:var(--focus-color);border-radius:3px;width:100%;opacity:0.8" data-h="70"></div>
+          <div style="font-size:9px;color:var(--muted)">Thu</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+          <div style="background:var(--accent2);border-radius:3px;width:100%;opacity:1" data-h="74"></div>
+          <div style="font-size:9px;color:var(--accent2);font-weight:700">Today</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP NOTIFICATION (live demo) -->
+<div class="popup-demo" id="popup">
+  <span class="popup-dismiss" onclick="closePopup()">✕</span>
+  <div class="popup-header">
+    <div class="popup-app-icon">🧠</div>
+    <div>
+      <div class="popup-app-name">NeuraFocus</div>
+      <div class="popup-time">Now</div>
+    </div>
+  </div>
+  <div class="popup-msg" id="popupMsg">⚠️ You've been distracted for 25 min</div>
+  <div class="popup-sub" id="popupSub">YouTube + context switching since 2:15pm. Your focus score dropped 8 points.</div>
+  <div class="popup-actions">
+    <button class="popup-btn primary" id="popupPrimary" onclick="closePopup()">Start Focusing</button>
+    <button class="popup-btn secondary" onclick="closePopup()">Dismiss</button>
+  </div>
+</div>
+
+<script>
+  const popups = {
+    distracted: {
+      msg: '⚠️ You\'ve been distracted for 25 min',
+      sub: 'YouTube + context switching since 2:15pm. Your focus score dropped 8 points.',
+      btn: 'Start Focusing',
+    },
+    walk: {
+      msg: '🚶 Time to take a walk',
+      sub: 'You\'ve been focused for 92 minutes straight. A 5–10 min break will restore your energy.',
+      btn: 'I\'ll take a break',
+    },
+    switching: {
+      msg: '🔀 Too much context switching',
+      sub: 'You switched apps 18 times in the last hour. Pick one task and stay with it.',
+      btn: 'Start Deep Work',
+    },
+    great: {
+      msg: '🔥 Excellent focus streak!',
+      sub: '88 minutes of deep work in VS Code. You\'re in the zone — keep going.',
+      btn: 'Keep Going',
+    },
+    break: {
+      msg: '☕ Coffee break?',
+      sub: 'It\'s 3pm and you\'re starting to lose focus. A short break usually helps.',
+      btn: 'Take a break',
+    },
+  };
+
+  function showPopup(type) {
+    const p = popups[type];
+    document.getElementById('popupMsg').textContent = p.msg;
+    document.getElementById('popupSub').textContent = p.sub;
+    document.getElementById('popupPrimary').textContent = p.btn;
+    const popup = document.getElementById('popup');
+    popup.style.display = 'block';
+    popup.style.animation = 'none';
+    void popup.offsetWidth;
+    popup.style.animation = 'slideIn 0.3s ease';
+
+    document.querySelectorAll('.popup-type-chip').forEach(c => c.classList.remove('selected'));
+    event.target.closest('.popup-type-chip').classList.add('selected');
+  }
+
+  function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+  }
+</script>
+<script src="app.js"></script>
+</body>
+</html>
